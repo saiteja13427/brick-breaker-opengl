@@ -9,6 +9,7 @@ GameLevel level1, level2, level3, level4;
 SpriteRenderer *renderer;
 GameObject *player;
 BallObject *ball;
+ParticleGenerator *particles;
 
 
 glm::vec2 PLAYER_SIZE = glm::vec2(120.0f, 20.0f);
@@ -19,7 +20,11 @@ const float BALL_RADIUS = 12.5f;
 
 void Game::init(){
     ResourceManager::loadShader("/home/saiteja/Qualcomm/preparation/breakout-opengl/shaders/sprite.vs", "/home/saiteja/Qualcomm/preparation/breakout-opengl/shaders/sprite.frag", nullptr, "sprite");
+    ResourceManager::loadShader("/home/saiteja/Qualcomm/preparation/breakout-opengl/shaders/particle.vs", "/home/saiteja/Qualcomm/preparation/breakout-opengl/shaders/particle.frag", nullptr, "particle");
     glm::mat4 proj = glm::ortho(0.0f, static_cast<float>(this->width), static_cast<float>(this->height), 0.0f, -1.0f, 1.0f);
+    ResourceManager::getShader("particle").use().setInteger("tex", 0);
+    ResourceManager::getShader("particle").setMatrix4("projection", proj);
+
     ResourceManager::getShader("sprite").use().setInteger("image", 0);
     ResourceManager::getShader("sprite").setMatrix4("projection", proj);
 
@@ -30,6 +35,7 @@ void Game::init(){
     ResourceManager::loadTexture("/home/saiteja/Qualcomm/preparation/breakout-opengl/image/block_solid.png", false, "block_solid");
     ResourceManager::loadTexture("/home/saiteja/Qualcomm/preparation/breakout-opengl/image/background.jpg", false, "background");
     ResourceManager::loadTexture("/home/saiteja/Qualcomm/preparation/breakout-opengl/image/paddle.png", true, "player");
+    ResourceManager::loadTexture("/home/saiteja/Qualcomm/preparation/breakout-opengl/image/particle.png", true, "particle");
 
     level1.load("/home/saiteja/Qualcomm/preparation/breakout-opengl/levels/one.lvl", this->height/2, this->width);
     level2.load("/home/saiteja/Qualcomm/preparation/breakout-opengl/levels/two.lvl", this->height/2, this->width);
@@ -47,6 +53,8 @@ void Game::init(){
 
     glm::vec2 ballPos = playerPos + glm::vec2((PLAYER_SIZE.x / 2) - BALL_RADIUS, -2.0f * BALL_RADIUS);
     ball = new BallObject(ballPos, BALL_RADIUS, INITIAL_BALL_VELOCITY, ResourceManager::getTexture("face"));
+
+    particles = new ParticleGenerator(ResourceManager::getShader("particle"), ResourceManager::getTexture("particle"), 500);
 }
 
 void Game::processInput(float dt){
@@ -67,6 +75,7 @@ void Game::processInput(float dt){
 void Game::update(float dt){
     ball->move(dt, this->width);
     doCollision();
+    particles->update(dt, *ball, 2, glm::vec2(ball->radius / 2.0f));
     if(ball->position.y > this->height){
         resetPlayer();
         resetLevel();
@@ -92,6 +101,7 @@ void Game::render(){
     renderer->DrawSprite(ResourceManager::getTexture("background"), glm::vec2(0.0, 0.0), glm::vec2(this->width, this->height), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
     if(state == GAME_ACTIVE){
         levels[level].draw(*renderer);
+        particles->draw();
         ball->draw(*renderer);
     }
     player->draw(*renderer);

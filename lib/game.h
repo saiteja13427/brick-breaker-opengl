@@ -4,6 +4,7 @@
 #include "sprite_renderer.h"
 #include "resourceman.h"
 #include "ball_object.h"
+#include "particle.h"
 
 enum GameState{
     GAME_ACTIVE,

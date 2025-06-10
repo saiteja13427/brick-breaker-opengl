@@ -12,6 +12,7 @@ add_executable(breakout main.cpp
                         lib/sprite_renderer.cpp
                         lib/game_object.cpp
                         lib/game_level.cpp
+                        lib/particle.cpp
                         lib/ball_object.cpp)
 
 target_link_libraries(breakout glfw)
