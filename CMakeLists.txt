@@ -13,7 +13,8 @@ add_executable(breakout main.cpp
                         lib/game_object.cpp
                         lib/game_level.cpp
                         lib/particle.cpp
-                        lib/ball_object.cpp)
+                        lib/ball_object.cpp
+                        lib/post_processor.cpp)
 
 target_link_libraries(breakout glfw)
 target_link_libraries(breakout ${CMAKE_DL_LIBS})

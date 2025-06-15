@@ -5,6 +5,7 @@
 #include "resourceman.h"
 #include "ball_object.h"
 #include "particle.h"
+#include "post_processor.h"
 
 enum GameState{
     GAME_ACTIVE,
@@ -32,6 +33,7 @@ class Game {
         unsigned int               width, height;
         std::vector<GameLevel>     levels;
         unsigned int               level;
+        float                      shakeTime;
 
         Game(unsigned int width, unsigned int height): width(width), height(height){}
         ~Game(){};

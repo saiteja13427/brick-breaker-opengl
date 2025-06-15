@@ -10,6 +10,7 @@ SpriteRenderer *renderer;
 GameObject *player;
 BallObject *ball;
 ParticleGenerator *particles;
+PostProcessor *processor;
 
 
 glm::vec2 PLAYER_SIZE = glm::vec2(120.0f, 20.0f);
@@ -21,6 +22,7 @@ const float BALL_RADIUS = 12.5f;
 void Game::init(){
     ResourceManager::loadShader("/home/saiteja/Qualcomm/preparation/breakout-opengl/shaders/sprite.vs", "/home/saiteja/Qualcomm/preparation/breakout-opengl/shaders/sprite.frag", nullptr, "sprite");
     ResourceManager::loadShader("/home/saiteja/Qualcomm/preparation/breakout-opengl/shaders/particle.vs", "/home/saiteja/Qualcomm/preparation/breakout-opengl/shaders/particle.frag", nullptr, "particle");
+    ResourceManager::loadShader("/home/saiteja/Qualcomm/preparation/breakout-opengl/shaders/quad.vs", "/home/saiteja/Qualcomm/preparation/breakout-opengl/shaders/quad.frag", nullptr, "quad");
     glm::mat4 proj = glm::ortho(0.0f, static_cast<float>(this->width), static_cast<float>(this->height), 0.0f, -1.0f, 1.0f);
     ResourceManager::getShader("particle").use().setInteger("tex", 0);
     ResourceManager::getShader("particle").setMatrix4("projection", proj);
@@ -55,6 +57,9 @@ void Game::init(){
     ball = new BallObject(ballPos, BALL_RADIUS, INITIAL_BALL_VELOCITY, ResourceManager::getTexture("face"));
 
     particles = new ParticleGenerator(ResourceManager::getShader("particle"), ResourceManager::getTexture("particle"), 500);
+
+    processor = new PostProcessor(ResourceManager::getShader("quad"), this->width, this->height);
+
 }
 
 void Game::processInput(float dt){
@@ -80,6 +85,11 @@ void Game::update(float dt){
         resetPlayer();
         resetLevel();
     }
+    if(shakeTime > 0.0f){
+        shakeTime -= dt;
+        if(shakeTime <= 0.0f)
+            processor->confuse = false;
+    }
 }
 
 void Game::resetPlayer(){
@@ -98,6 +108,7 @@ void Game::resetLevel(){
 }
 
 void Game::render(){
+    processor->BeginRender();
     renderer->DrawSprite(ResourceManager::getTexture("background"), glm::vec2(0.0, 0.0), glm::vec2(this->width, this->height), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
     if(state == GAME_ACTIVE){
         levels[level].draw(*renderer);
@@ -105,6 +116,8 @@ void Game::render(){
         ball->draw(*renderer);
     }
     player->draw(*renderer);
+    processor->EndRender();
+    processor->Render(glfwGetTime());
 }
 
 void Game::doCollision(){
@@ -114,6 +127,10 @@ void Game::doCollision(){
             if(std::get<0>(collision)){
                 if(!brick.isSolid)
                     brick.isDestroyed = true;
+                else {
+                    shakeTime = 0.05f;
+                    processor->confuse = true;
+                }
 
                 Direction dir = std::get<1>(collision);
                 glm::vec2 diff_vec = std::get<2>(collision);
